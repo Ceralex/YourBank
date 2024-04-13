@@ -1,5 +1,4 @@
 from flask import Flask, redirect, render_template, request, url_for, session, g
-import sqlite3 as sq
 import hashlib
 import psycopg2
 import os
@@ -23,6 +22,9 @@ def check_password(db, username, password):
     cur.close()
     if user is None:
         return False
+    
+    password = hashlib.sha256(password.encode()).hexdigest()
+
     return user[0] == password
 
 def get_balance_infos(db, username):
@@ -60,10 +62,20 @@ def get_balance_infos(db, username):
         "balance": balance
     }
 
+def create_user(db, username, password):
+    password = hashlib.sha256(password.encode()).hexdigest()
+    
+    cur = db.cursor()
+    
+    cur.execute("INSERT INTO accounts (username, password) VALUES (%s, %s)", (username, password))
+
+    db.commit()
+    cur.close()
+
 @app.get("/")
 def index():
     return render_template('index.html')
-    
+
 @app.post("/login")
 def login():
     username = request.form["username"]
@@ -75,6 +87,29 @@ def login():
         return redirect(url_for("me"))
     else:
         return render_template("index.html", error="Invalid username or password")
+
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    if request.method == "GET":
+        return render_template("signup.html")
+    elif request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        repeat_password = request.form["repeat-password"]
+
+        if password != repeat_password:
+            return render_template("signup.html", error="Passwords do not match")
+
+        db = g.db
+
+        try:
+            create_user(db, username, password)
+        except psycopg2.errors.UniqueViolation:
+            return render_template("signup.html", error="Username already exists")
+        
+        session["username"] = username
+
+        return redirect(url_for("me"))
 
 @app.before_request
 def before_request():

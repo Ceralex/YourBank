@@ -1,0 +1,69 @@
+{% extends "_base.html" %} {% block content %}
+<section class="h-screen flex flex-col justify-center items-center gap-10">
+	<h1 class="text-3xl font-bold">Account Creation</h1>
+	<form class="w-1/5" action="/signup" method="post">
+		<div class="mb-5">
+			<label for="username" class="block mb-2 text-sm font-medium text-gray-900"
+				>Your username</label
+			>
+			<input
+				type="username"
+				id="username"
+				name="username"
+				class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+				required />
+		</div>
+		<div class="mb-5">
+			<label for="password" class="block mb-2 text-sm font-medium text-gray-900"
+				>Your password</label
+			>
+			<input
+				type="password"
+				id="password"
+				name="password"
+				class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+				required />
+		</div>
+		<div class="mb-5">
+			<label
+				for="repeat-password"
+				class="block mb-2 text-sm font-medium text-gray-900"
+				>Repeat password</label
+			>
+			<input
+				type="password"
+				id="repeat-password"
+				name="repeat-password"
+				class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+				required />
+		</div>
+		<div class="flex items-start mb-5">
+			<div class="flex items-center h-5">
+				<input
+					id="terms"
+					type="checkbox"
+					value=""
+					class="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300"
+					required />
+			</div>
+			<label for="terms" class="ms-2 text-sm font-medium text-gray-900"
+				>I agree with the
+				<a
+					href="https://cdn.riddle.com/embeds/v3/images/transformed/w_1162,h_799/6a0/6a06abc2478b1f86c523419ae812e835.webp"
+					target="_blank"
+					class="text-blue-600 hover:underline"
+					>terms and conditions</a
+				></label
+			>
+		</div>
+		<button
+			type="submit"
+			class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+			Register new account
+		</button>
+	</form>
+	{% if error %}
+	<h3 class="text-red-500 font-bold">{{ error }}</h3>
+	{% endif %}
+</section>
+{% endblock %}
