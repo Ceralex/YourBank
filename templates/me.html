@@ -1,0 +1,9 @@
+{% extends "_base.html" %}
+
+{% block content %}
+		<h1>Your account</h1>
+		<h3>Welcome to your private page, {{ username }}!</h3>
+		<h5>Balance: {{ infos.balance }}</h5>
+		<a href="/logout">Logout</a>
+	</body>
+{% endblock %}
