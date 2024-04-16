@@ -30,13 +30,11 @@ def check_password(db, username, password):
 def get_balance_infos(db, username):
     cur = db.cursor()
     cur.execute("""SELECT
-                        accounts.username,
-                        SUM(COALESCE(transactions.amount, 0::money)) AS transaction_total,
-                        SUM(COALESCE(transfers_in.amount, 0::money)) AS received_transfers_total,
-                        SUM(COALESCE(transfers_out.amount, 0::money)) AS sent_transfers_total,
-                        SUM(COALESCE(transfers_in.amount, 0::money))
-                        - SUM(COALESCE(transactions.amount, 0::money))
-                        - SUM(COALESCE(transfers_out.amount, 0::money))::money AS balance
+                        COALESCE(SUM(transfers_in.amount), 0::money) AS total_income,
+                        COALESCE(SUM(transactions.amount), 0::money) + COALESCE(SUM(transfers_out.amount), 0::money) AS total_expenses,
+                        (COALESCE(SUM(transfers_in.amount), 0::money) 
+                        - COALESCE(SUM(transactions.amount), 0::money)
+                        - COALESCE(SUM(transfers_out.amount), 0::money))::money AS balance
                     FROM
                         accounts
                     LEFT JOIN transactions ON transactions.bank_account_id = accounts.id
@@ -45,20 +43,19 @@ def get_balance_infos(db, username):
                     WHERE
                         accounts.username = %s
                     GROUP BY
-                        accounts.username;""",
+                        accounts.username;
+""",
       (username,))
     infos = cur.fetchone()
     cur.close()
 
-    total_transactions = infos[1]
-    total_received_transfers = infos[2]
-    total_sent_transfers = infos[3]
-    balance = infos[4]
+    total_income = infos[0]
+    total_expenses = infos[1]
+    balance = infos[2]
 
     return {
-        "total_transactions": total_transactions,
-        "total_received_transfers": total_received_transfers,
-        "total_sent_transfers": total_sent_transfers,
+        "total_income": total_income,
+        "total_expenses": total_expenses,
         "balance": balance
     }
 
