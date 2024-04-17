@@ -59,6 +59,40 @@ def get_balance_infos(db, username):
         "balance": balance
     }
 
+def get_operations(db, username):
+    cur = db.cursor()
+    cur.execute("""SELECT
+                        'Transaction' AS record_type,
+                        transactions.amount,
+                        transactions.description,
+                        to_char(transactions.date, 'YYYY-MM-DD HH24:MI') AS date
+                    FROM
+                        accounts
+                    JOIN transactions ON transactions.bank_account_id = accounts.id
+                    WHERE
+                        accounts.username = %s
+
+                    UNION ALL
+
+                    SELECT
+                        CASE WHEN transfers.sender_bank_account_id = accounts.id THEN 'Transfer sent' ELSE 'Transfer seceived' END AS record_type,
+                        CASE WHEN transfers.sender_bank_account_id = accounts.id THEN (-transfers.amount::numeric)::money ELSE transfers.amount END AS amount,
+                        transfers.description,
+                        to_char(transfers.date, 'YYYY-MM-DD HH24:MI') AS date
+                    FROM
+                        accounts
+                    LEFT JOIN transfers ON transfers.sender_bank_account_id = accounts.id OR transfers.receiver_bank_account_id = accounts.id
+                    WHERE
+                        accounts.username = %s
+
+                    ORDER BY date DESC;
+""",
+      (username, username,))
+    operations = cur.fetchall()
+    cur.close()
+
+    return operations
+
 def create_user(db, username, password):
     password = hashlib.sha256(password.encode()).hexdigest()
     
@@ -124,8 +158,10 @@ def me():
     if "username" in session:
         username = session["username"]
 
-        infos = get_balance_infos(g.db, username)
-        return render_template("me.html", username=username, infos=infos)
+        account_infos = get_balance_infos(g.db, username)
+        past_operations = get_operations(g.db, username)
+
+        return render_template("me.html", username=username, infos=account_infos, operations=past_operations, len=len(past_operations))
     else:
         return redirect(url_for("index"))
 
