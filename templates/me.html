@@ -25,35 +25,41 @@
 				</button>
 			</form>
 		</div>
-		<div class="flex justify-between border-gray-200 border-b pb-3">
+		<div class="flex justify-between border-b pb-3">
 			<dl>
-				<dt class="text-base font-normal text-gray-500 pb-1">Balance</dt>
-				<dd class="leading-none text-3xl font-bold text-gray-900">
-					{{ infos.balance }}
+				<dt class="text-base font-normal text-gray-700 pb-1">Balance</dt>
+				<dd
+					class="leading-none text-3xl font-bold {{ 'text-red-500' if infos.balance|int < 0 else 'text-green-600' }}">
+					€ {{ infos.balance }}
 				</dd>
 			</dl>
 		</div>
 
-		<div class="grid grid-cols-2 py-3 border-gray-200 border-b">
+		<div class="grid grid-cols-2 py-3 border-b">
 			<dl>
-				<dt class="text-base font-normal text-gray-500pb-1">Total Income</dt>
-				<dd class="leading-none text-xl font-bold text-green-500">
-					{{ infos.total_income }}
+				<dt class="text-base font-normal text-gray-700 pb-1">Total Income</dt>
+				<dd class="leading-none text-xl font-bold text-green-600">
+					€ {{ infos.total_income }}
 				</dd>
 			</dl>
 			<dl>
-				<dt class="text-base font-normal text-gray-500 pb-1">Total Expense</dt>
-				<dd class="leading-none text-xl font-bold text-red-600">
-					-{{ infos.total_expenses }}
+				<dt class="text-base font-normal text-gray-700 pb-1">Total Expense</dt>
+				<dd class="leading-none text-xl font-bold text-red-700">
+					€ {{ infos.total_expenses }}
 				</dd>
 			</dl>
 		</div>
 
-		<div class="flex flex-col gap-4">
+		<div class="py-2 text-4xl font-bold">Operations</div>
+
+		<div class="flex flex-col">
 			{%for i in range(0, len)%}
-			<div class="grid grid-cols-4 h-12 items-center border-b">
-				<div class="font-semibold text-2xl">{{ operations[i][0] }}</div>
-				<div class="font-bold text-2xl">{{ operations[i][1] }}</div>
+			<div class="grid grid-cols-4 items-center border-b py-2">
+				<div class="font-semibold text-xl">{{ operations[i][0] }}</div>
+				<div
+					class="font-bold text-2xl {{ 'text-red-500' if (operations[i][0] == 'Transaction' or operations[i][0] == 'Transfer sent') else 'text-green-500' }}">
+					€ {{ operations[i][1] }}
+				</div>
 				<div class="truncate w-3/4">{{ operations[i][2] }}</div>
 				<div class="">{{ operations[i][3] }}</div>
 			</div>
