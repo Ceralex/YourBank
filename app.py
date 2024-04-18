@@ -1,23 +1,15 @@
 from flask import Flask, redirect, render_template, request, url_for, session, g
 import hashlib
-import psycopg2
-import os
-from dotenv import load_dotenv
+import sqlite3
+from decimal import Decimal
 
 app = Flask(__name__)
 
-USERNAME = "user"
-PASSWORD = "password"
-
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
-
-load_dotenv()
-
-DATABASE_URL = os.environ.get('DATABASE_URL')
 
 def check_password(db, username, password):
     cur = db.cursor()
-    cur.execute("SELECT password FROM accounts WHERE username = %s", (username,))
+    cur.execute("SELECT password FROM accounts WHERE username = ?", (username,))
     user = cur.fetchone()
     cur.close()
     if user is None:
@@ -30,33 +22,37 @@ def check_password(db, username, password):
 def get_balance_infos(db, username):
     cur = db.cursor()
     cur.execute("""SELECT
-                        COALESCE(SUM(transfers_in.amount), 0::money) AS total_income,
-                        COALESCE(SUM(transactions.amount), 0::money) + COALESCE(SUM(transfers_out.amount), 0::money) AS total_expenses,
-                        (COALESCE(SUM(transfers_in.amount), 0::money) 
-                        - COALESCE(SUM(transactions.amount), 0::money)
-                        - COALESCE(SUM(transfers_out.amount), 0::money))::money AS balance
+                        COALESCE(SUM(transfers_in.amount), 0),
+                        COALESCE(SUM(transactions.amount), 0) + COALESCE(SUM(transfers_out.amount), 0),
+                        (COALESCE(SUM(transfers_in.amount), 0) 
+                        - COALESCE(SUM(transactions.amount), 0)
+                        - COALESCE(SUM(transfers_out.amount), 0))
                     FROM
                         accounts
                     LEFT JOIN transactions ON transactions.bank_account_id = accounts.id
-                    LEFT JOIN transfers transfers_in ON transfers_in.receiver_bank_account_id = accounts.id
-                    LEFT JOIN transfers transfers_out ON transfers_out.sender_bank_account_id = accounts.id
+                    LEFT JOIN transfers as transfers_in ON transfers_in.receiver_bank_account_id = accounts.id
+                    LEFT JOIN transfers as transfers_out ON transfers_out.sender_bank_account_id = accounts.id
                     WHERE
-                        accounts.username = %s
+                        accounts.username = ?
                     GROUP BY
                         accounts.username;
-""",
-      (username,))
+""", (username,))
     infos = cur.fetchone()
     cur.close()
 
-    total_income = infos[0]
-    total_expenses = infos[1]
-    balance = infos[2]
+    if infos:
+        total_income = Decimal(infos[0])
+        total_expenses = Decimal(infos[1])
+        balance = Decimal(infos[2])
+    else:
+        total_income = Decimal('0.00')
+        total_expenses = Decimal('0.00')
+        balance = Decimal('0.00')
 
     return {
-        "total_income": total_income,
-        "total_expenses": total_expenses,
-        "balance": balance
+        "total_income": f"{total_income:.2f}",
+        "total_expenses": f"{total_expenses:.2f}",
+        "balance": f"{balance:.2f}"
     }
 
 def get_operations(db, username):
@@ -65,40 +61,46 @@ def get_operations(db, username):
                         'Transaction' AS record_type,
                         transactions.amount,
                         transactions.description,
-                        to_char(transactions.date, 'YYYY-MM-DD HH24:MI') AS date
+                        strftime('%Y-%m-%d %H:%M', transactions.date) AS date
                     FROM
                         accounts
                     JOIN transactions ON transactions.bank_account_id = accounts.id
                     WHERE
-                        accounts.username = %s
+                        accounts.username = ?
 
                     UNION ALL
 
                     SELECT
-                        CASE WHEN transfers.sender_bank_account_id = accounts.id THEN 'Transfer sent' ELSE 'Transfer seceived' END AS record_type,
-                        CASE WHEN transfers.sender_bank_account_id = accounts.id THEN (-transfers.amount::numeric)::money ELSE transfers.amount END AS amount,
+                        CASE WHEN transfers.sender_bank_account_id = accounts.id THEN 'Transfer sent' ELSE 'Transfer received' END AS record_type,
+                        CASE WHEN transfers.sender_bank_account_id = accounts.id THEN -transfers.amount ELSE transfers.amount END AS amount,
                         transfers.description,
-                        to_char(transfers.date, 'YYYY-MM-DD HH24:MI') AS date
+                        strftime('%Y-%m-%d %H:%M', transfers.date) AS date
                     FROM
                         accounts
                     LEFT JOIN transfers ON transfers.sender_bank_account_id = accounts.id OR transfers.receiver_bank_account_id = accounts.id
                     WHERE
-                        accounts.username = %s
+                        accounts.username = ? AND transfers.amount IS NOT NULL
 
                     ORDER BY date DESC;
 """,
-      (username, username,))
+      (username, username))
     operations = cur.fetchall()
     cur.close()
 
-    return operations
+    # Format each operation amount as money
+    formatted_operations = []
+    for record_type, amount, description, date in operations:
+        formatted_amount = f"{Decimal(amount):.2f}"  # Formatting the amount as a string with two decimal places
+        formatted_operations.append((record_type, formatted_amount, description, date))
+
+    return formatted_operations
 
 def create_user(db, username, password):
     password = hashlib.sha256(password.encode()).hexdigest()
     
     cur = db.cursor()
     
-    cur.execute("INSERT INTO accounts (username, password) VALUES (%s, %s)", (username, password))
+    cur.execute("INSERT INTO accounts (username, password) VALUES (?, ?)", (username, password,))
 
     db.commit()
     cur.close()
@@ -135,8 +137,8 @@ def signup():
 
         try:
             create_user(db, username, password)
-        except psycopg2.errors.UniqueViolation:
-            return render_template("signup.html", error="Username already exists")
+        except sqlite3.IntegrityError:
+            return render_template("signup.html", error="Username already taken")
         
         session["username"] = username
 
@@ -144,7 +146,7 @@ def signup():
 
 @app.before_request
 def before_request():
-    db = psycopg2.connect(DATABASE_URL)
+    db = sqlite3.connect("bank.sqlite")
     g.db = db
 
 @app.after_request
