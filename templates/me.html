@@ -55,7 +55,13 @@
 		<div class="flex flex-col">
 			{%for i in range(0, len)%}
 			<div class="grid grid-cols-4 items-center border-b py-2">
-				<div class="font-semibold text-xl">{{ operations[i][0] }}</div>
+				<div class="font-semibold flex items-center gap-2">
+					{% if operations[i][0] == 'Transfer received'%} {% include
+					'icons/transfer-in.html' %} {% elif operations[i][0] == 'Transfer
+					sent'%} {% include 'icons/transfer-out.html' %} {% elif
+					operations[i][0] == 'Transaction' %} {% include
+					'icons/transaction.html' %}{% endif %} - {{ operations[i][0] }}
+				</div>
 				<div
 					class="font-bold text-2xl {{ 'text-red-500' if (operations[i][0] == 'Transaction' or operations[i][0] == 'Transfer sent') else 'text-green-500' }}">
 					€ {{ operations[i][1] }}

@@ -8,7 +8,7 @@
 
 - Who? User
   <br>
-  What? See his balance, his transfers and transactions history
+  What? See his balance and his operations history
   <br>
   How? With a nice UI
 
@@ -23,3 +23,9 @@
   What? Make transfer to another user
   <br>
   How? With a form and the other's id
+
+- Who? User
+  <br>
+  What? Make deposit to his bank account
+  <br>
+  How? With a form with an amount selection
