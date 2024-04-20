@@ -59,7 +59,7 @@ def get_operations(db, username):
     cur = db.cursor()
     cur.execute("""SELECT
                         'Transaction' AS record_type,
-                        transactions.amount,
+                        -transactions.amount,
                         transactions.description,
                         strftime('%Y-%m-%d %H:%M', transactions.date) AS date
                     FROM

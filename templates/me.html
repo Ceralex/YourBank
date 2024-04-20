@@ -1,69 +1,59 @@
 {% extends "_base.html" %} {% block content %}
-<main class="m-10">
-	<div class="w-full bg-gray-50 rounded-lg shadow p-4 md:p-6">
-		<div class="flex gap-5 mb-5">
-			<div class="relative w-10 h-10 overflow-hidden bg-gray-600 rounded-full">
-				<svg
-					class="absolute w-12 h-12 text-gray-400 -left-1"
-					fill="currentColor"
-					viewBox="0 0 20 20"
-					xmlns="http://www.w3.org/2000/svg">
-					<path
-						fill-rule="evenodd"
-						d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-						clip-rule="evenodd"></path>
-				</svg>
-			</div>
 
-			<h1 class="text-3xl font-bold">{{ username }}</h1>
-
-			<form action="/logout" method="get">
-				<button
+<main class="bg-gray-100 p-14">
+	<div>
+		<div class="flex justify-between">
+			<h1 class="text-3xl font-semibold mb-10">Overview</h1>
+			<div class="flex gap-3">
+				<div class="relative w-10 h-10 overflow-hidden bg-gray-400 rounded-full">
+					<svg
+						class="absolute w-12 h-12 text-gray-200 -left-1"
+						fill="currentColor"
+						viewBox="0 0 20 20"
+						xmlns="http://www.w3.org/2000/svg">
+						<path
+							fill-rule="evenodd"
+							d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+							clip-rule="evenodd"></path>
+					</svg>
+				</div>
+				<form action="/logout" method="get">
+					<button
 					type="submit"
-					class="bg-blue-500 text-white font-semibold px-3 py-2 rounded-md">
-					Logout
-				</button>
-			</form>
-		</div>
-		<div class="flex justify-between border-b pb-3">
-			<dl>
-				<dt class="text-base font-normal text-gray-700 pb-1">Balance</dt>
-				<dd
-					class="leading-none text-3xl font-bold {{ 'text-red-500' if infos.balance|int < 0 else 'text-green-600' }}">
-					€ {{ infos.balance }}
-				</dd>
-			</dl>
+					class="bg-sky-500 text-white font-semibold px-3 py-2 rounded w-full flex">
+						Logout
+					</button>
+				</form>
+			</div>
 		</div>
 
-		<div class="grid grid-cols-2 py-3 border-b">
-			<dl>
-				<dt class="text-base font-normal text-gray-700 pb-1">Total Income</dt>
-				<dd class="leading-none text-xl font-bold text-green-600">
-					€ {{ infos.total_income }}
-				</dd>
-			</dl>
-			<dl>
-				<dt class="text-base font-normal text-gray-700 pb-1">Total Expense</dt>
-				<dd class="leading-none text-xl font-bold text-red-700">
-					€ {{ infos.total_expenses }}
-				</dd>
-			</dl>
 		</div>
+		<div class="grid grid-cols-3 text-center rounded-lg border bg-[#557daa]">
+			<div class="border-r py-14 space-y-2">
+				<h1 class="text-xl uppercase text-gray-200">Total Balance</h1>
+				<p class="text-4xl text-white">€ {{ infos.balance }}</p>
+			</div>
+			<div class="border-r py-14 space-y-2">
+				<h1 class="text-xl uppercase text-gray-200">Total Income</h1>
+				<p class="text-4xl text-white">€ {{ infos.total_income }}</p>
+			</div>
+			<div class="border-r py-14 space-y-2">
+				<h1 class="text-xl uppercase text-gray-200">Total Expense</h1>
+				<p class="text-4xl text-white">€ {{ infos.total_expenses }}</p>
+			</div>
+		</div>
+	</div>
 
-		<div class="py-2 text-4xl font-bold">Operations</div>
-
+	<div>
+		<h1 class="text-3xl font-semibold my-5">Operations</h1>
 		<div class="flex flex-col">
 			{%for i in range(0, len)%}
-			<div class="grid grid-cols-4 items-center border-b py-2">
-				<div class="font-semibold flex items-center gap-2">
-					{% if operations[i][0] == 'Transfer received'%} {% include
-					'icons/transfer-in.html' %} {% elif operations[i][0] == 'Transfer
-					sent'%} {% include 'icons/transfer-out.html' %} {% elif
-					operations[i][0] == 'Transaction' %} {% include
-					'icons/transaction.html' %}{% endif %} - {{ operations[i][0] }}
+			<div class="grid grid-cols-4 text-center items-center border-b py-4 px-16">
+				<div class="font-semibold text-xl flex items-center gap-2">
+					{{ operations[i][0] }}
 				</div>
 				<div
-					class="font-bold text-2xl {{ 'text-red-500' if (operations[i][0] == 'Transaction' or operations[i][0] == 'Transfer sent') else 'text-green-500' }}">
+					class="font-semibold text-xl {{ 'text-red-500' if (operations[i][0] == 'Transaction' or operations[i][0] == 'Transfer sent') else 'text-green-500' }}">
 					€ {{ operations[i][1] }}
 				</div>
 				<div class="truncate w-3/4">{{ operations[i][2] }}</div>
