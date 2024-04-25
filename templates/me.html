@@ -48,9 +48,15 @@
 			<h1 class="text-3xl font-semibold">Operations</h1>
 
 			<div class="flex gap-3">
-				<a href="{{ url_for('transaction') }}">
+				<a href="{{ url_for('deposit') }}">
 					<button
 						class="h-10 px-2 rounded bg-teal-500 text-white font-semibold">
+						Make a deposit
+					</button>
+				</a>
+				<a href="{{ url_for('transaction') }}">
+					<button
+						class="h-10 px-2 rounded bg-amber-500 text-white font-semibold">
 						Add a Transaction
 					</button>
 				</a>
@@ -74,7 +80,7 @@
 					€ {{ operations[i][1] }}
 				</div>
 				<div class="truncate w-3/4">{{ operations[i][2] }}</div>
-				<div class="">{{ operations[i][3] }}</div>
+				<div>{{ operations[i][3] }}</div>
 			</div>
 			{%endfor%}
 		</div>

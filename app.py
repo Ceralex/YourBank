@@ -81,7 +81,11 @@ def get_operations(db, username):
                     UNION ALL
 
                     SELECT
-                        CASE WHEN transfers.sender_bank_account_id = accounts.id THEN 'Transfer sent' ELSE 'Transfer received' END AS record_type,
+                        CASE
+                            WHEN transfers.sender_bank_account_id = accounts.id THEN 'Transfer sent'
+                            WHEN transfers.sender_bank_account_id IS NULL THEN 'Deposit' -- Handle deposit case
+                            ELSE 'Transfer received'
+                        END AS record_type,
                         CASE WHEN transfers.sender_bank_account_id = accounts.id THEN -transfers.amount ELSE transfers.amount END AS amount,
                         transfers.description,
                         strftime('%Y-%m-%d %H:%M', transfers.date) AS date
@@ -148,6 +152,17 @@ def make_transfer(db, sender, receiver, amount, description):
     receiver_id = cur.fetchone()[0]
 
     cur.execute("INSERT INTO transfers (sender_bank_account_id, receiver_bank_account_id, amount, description) VALUES (?, ?, ?, ?)", (sender_id, receiver_id, amount, description))
+
+    db.commit()
+    cur.close()
+
+def make_deposit(db, username, amount):
+    cur = db.cursor()
+
+    cur.execute("SELECT id FROM accounts WHERE username = ?", (username,))
+    account_id = cur.fetchone()[0]
+
+    cur.execute("INSERT INTO transfers (receiver_bank_account_id, amount, description) VALUES (?, ?, 'Deposit')", (account_id, amount))
 
     db.commit()
     cur.close()
@@ -287,6 +302,21 @@ def transfer():
         make_transfer(g.db, username, beneficiary, amount, description)
 
         return redirect(url_for("me"))
-    
+
+@app.route("/deposit", methods=["GET", "POST"])
+def deposit():
+    if "username" not in session:
+        return redirect(url_for("index"))
+
+    if request.method == "GET":
+        return render_template("make_deposit.html")
+    elif request.method == "POST":
+        username = session["username"]
+
+        amount = request.form["amount"]
+        
+        make_deposit(g.db, username, amount)
+
+        return redirect(url_for("me"))
 if __name__ == "__main__":
     app.run(debug=True)

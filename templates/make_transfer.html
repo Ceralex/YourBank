@@ -3,7 +3,9 @@
 	<h1 class="text-3xl font-bold">Make Transfer</h1>
 	<form class="w-1/5" action="{{ url_for('transfer') }}" method="post">
 		<div class="mb-5">
-			<label for="username" class="block mb-2 text-sm font-medium text-gray-900"
+			<label
+				for="beneficiary"
+				class="block mb-2 text-sm font-medium text-gray-900"
 				>Beneficiary</label
 			>
 			<input
@@ -14,7 +16,7 @@
 				required />
 		</div>
 		<div class="mb-5">
-			<label for="username" class="block mb-2 text-sm font-medium text-gray-900"
+			<label for="amount" class="block mb-2 text-sm font-medium text-gray-900"
 				>Amount</label
 			>
 			<input
@@ -25,7 +27,9 @@
 				required />
 		</div>
 		<div class="mb-5">
-			<label for="username" class="block mb-2 text-sm font-medium text-gray-900"
+			<label
+				for="description"
+				class="block mb-2 text-sm font-medium text-gray-900"
 				>Description</label
 			>
 			<input
