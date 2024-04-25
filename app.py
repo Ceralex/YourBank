@@ -126,6 +126,32 @@ def add_transaction(db, username, amount, description):
     db.commit()
     cur.close()
 
+def get_account_id(db, username):
+    cur = db.cursor()
+    cur.execute("SELECT id FROM accounts WHERE username = ?", (username,))
+    account_id = cur.fetchone()
+
+    if account_id is not None:
+        account_id = account_id[0]
+    
+    cur.close()
+
+    return account_id
+
+def make_transfer(db, sender, receiver, amount, description):
+    cur = db.cursor()
+
+    cur.execute("SELECT id FROM accounts WHERE username = ?", (sender,))
+    sender_id = cur.fetchone()[0]
+
+    cur.execute("SELECT id FROM accounts WHERE username = ?", (receiver,))
+    receiver_id = cur.fetchone()[0]
+
+    cur.execute("INSERT INTO transfers (sender_bank_account_id, receiver_bank_account_id, amount, description) VALUES (?, ?, ?, ?)", (sender_id, receiver_id, amount, description))
+
+    db.commit()
+    cur.close()
+
 @app.get("/")
 def index():
     return render_template('index.html')
@@ -194,15 +220,14 @@ def me():
 
     return render_template("me.html", username=username, infos=account_infos, operations=past_operations, len=len(past_operations))
         
-
 @app.route("/transaction", methods=["GET", "POST"])
 def transaction():
+    if "username" not in session:
+        return redirect(url_for("index"))
+    
     if request.method == "GET":
         return render_template("make_transaction.html")
     elif request.method == "POST":
-        if "username" not in session:
-            return redirect(url_for("index"))
-
         username = session["username"]
 
         amount = request.form["amount"]
@@ -225,6 +250,43 @@ def transaction():
 
         return redirect(url_for("me"))
 
+@app.route("/transfer", methods=["GET", "POST"])
+def transfer():
+    if "username" not in session:
+        return redirect(url_for("index"))
 
+    if request.method == "GET":
+        return render_template("make_transfer.html")
+    elif request.method == "POST":
+        username = session["username"]
+
+        beneficiary = request.form["beneficiary"]
+        amount = request.form["amount"]
+        description = request.form["description"]
+
+        if amount.count(",") > 1:
+            return render_template("make_transfer.html", error="Invalid amount")
+        
+        amount = amount.strip().replace(",", ".")
+
+        try:
+            Decimal(amount)
+        except:
+            return render_template("make_transfer.html", error="Invalid amount")
+                
+        if float(amount) <= 0:
+            return render_template("make_transfer.html", error="Invalid amount")
+        
+
+        beneficiary_id = get_account_id(g.db, beneficiary)
+
+        if beneficiary_id is None:
+            return render_template("make_transfer.html", error="Beneficiary not found")
+
+
+        make_transfer(g.db, username, beneficiary, amount, description)
+
+        return redirect(url_for("me"))
+    
 if __name__ == "__main__":
     app.run(debug=True)

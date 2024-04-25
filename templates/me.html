@@ -1,6 +1,6 @@
 {% extends "_base.html" %} {% block content %}
 
-<main class="bg-gray-100 p-14">
+<main class="p-14 bg-gray-100 min-h-screen">
 	<div>
 		<div class="flex justify-between">
 			<h1 class="text-3xl font-semibold mb-10">Overview</h1>
@@ -54,9 +54,12 @@
 						Add a Transaction
 					</button>
 				</a>
-				<button class="px-3 py-2 rounded bg-cyan-500 text-white font-semibold">
-					Make a Transfer
-				</button>
+				<a href="{{ url_for('transfer') }}">
+					<button
+						class="px-3 py-2 rounded bg-cyan-500 text-white font-semibold">
+						Make a Transfer
+					</button>
+				</a>
 			</div>
 		</div>
 		<div class="flex flex-col">
