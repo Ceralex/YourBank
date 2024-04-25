@@ -5,7 +5,8 @@
 		<div class="flex justify-between">
 			<h1 class="text-3xl font-semibold mb-10">Overview</h1>
 			<div class="flex gap-3">
-				<div class="relative w-10 h-10 overflow-hidden bg-gray-400 rounded-full">
+				<div
+					class="relative w-10 h-10 overflow-hidden bg-gray-400 rounded-full">
 					<svg
 						class="absolute w-12 h-12 text-gray-200 -left-1"
 						fill="currentColor"
@@ -19,36 +20,49 @@
 				</div>
 				<form action="/logout" method="get">
 					<button
-					type="submit"
-					class="bg-sky-500 text-white font-semibold px-3 py-2 rounded w-full flex">
+						type="submit"
+						class="bg-sky-500 text-white font-semibold px-3 py-2 rounded flex">
 						Logout
 					</button>
 				</form>
 			</div>
 		</div>
-
+	</div>
+	<div class="grid grid-cols-3 text-center rounded-lg border bg-sky-600 mb-5">
+		<div class="border-r py-14 space-y-2">
+			<h1 class="text-xl uppercase text-gray-200">Total Balance</h1>
+			<p class="text-4xl text-white">€ {{ infos.balance }}</p>
 		</div>
-		<div class="grid grid-cols-3 text-center rounded-lg border bg-[#557daa]">
-			<div class="border-r py-14 space-y-2">
-				<h1 class="text-xl uppercase text-gray-200">Total Balance</h1>
-				<p class="text-4xl text-white">€ {{ infos.balance }}</p>
-			</div>
-			<div class="border-r py-14 space-y-2">
-				<h1 class="text-xl uppercase text-gray-200">Total Income</h1>
-				<p class="text-4xl text-white">€ {{ infos.total_income }}</p>
-			</div>
-			<div class="border-r py-14 space-y-2">
-				<h1 class="text-xl uppercase text-gray-200">Total Expense</h1>
-				<p class="text-4xl text-white">€ {{ infos.total_expenses }}</p>
-			</div>
+		<div class="border-r py-14 space-y-2">
+			<h1 class="text-xl uppercase text-gray-200">Total Income</h1>
+			<p class="text-4xl text-white">€ {{ infos.total_income }}</p>
+		</div>
+		<div class="border-r py-14 space-y-2">
+			<h1 class="text-xl uppercase text-gray-200">Total Expense</h1>
+			<p class="text-4xl text-white">€ {{ infos.total_expenses }}</p>
 		</div>
 	</div>
 
 	<div>
-		<h1 class="text-3xl font-semibold my-5">Operations</h1>
+		<div class="flex justify-between items-center">
+			<h1 class="text-3xl font-semibold">Operations</h1>
+
+			<div class="flex gap-3">
+				<a href="{{ url_for('transaction') }}">
+					<button
+						class="h-10 px-2 rounded bg-teal-500 text-white font-semibold">
+						Add a Transaction
+					</button>
+				</a>
+				<button class="px-3 py-2 rounded bg-cyan-500 text-white font-semibold">
+					Make a Transfer
+				</button>
+			</div>
+		</div>
 		<div class="flex flex-col">
 			{%for i in range(0, len)%}
-			<div class="grid grid-cols-4 text-center items-center border-b py-4 px-16">
+			<div
+				class="grid grid-cols-4 text-center items-center border-b py-4 px-16">
 				<div class="font-semibold text-xl flex items-center gap-2">
 					{{ operations[i][0] }}
 				</div>

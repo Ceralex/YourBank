@@ -22,32 +22,42 @@ def check_password(db, username, password):
 def get_balance_infos(db, username):
     cur = db.cursor()
     cur.execute("""SELECT
-                        COALESCE(SUM(transfers_in.amount), 0),
-                        COALESCE(SUM(transactions.amount), 0) + COALESCE(SUM(transfers_out.amount), 0),
-                        (COALESCE(SUM(transfers_in.amount), 0) 
-                        - COALESCE(SUM(transactions.amount), 0)
-                        - COALESCE(SUM(transfers_out.amount), 0))
+                        COALESCE(SUM(transactions.amount), 0) AS transactions_out
                     FROM
                         accounts
-                    LEFT JOIN transactions ON transactions.bank_account_id = accounts.id
-                    LEFT JOIN transfers as transfers_in ON transfers_in.receiver_bank_account_id = accounts.id
-                    LEFT JOIN transfers as transfers_out ON transfers_out.sender_bank_account_id = accounts.id
+                    JOIN transactions ON transactions.bank_account_id = accounts.id
                     WHERE
-                        accounts.username = ?
-                    GROUP BY
-                        accounts.username;
-""", (username,))
-    infos = cur.fetchone()
+                        accounts.username = ?;
+    """, (username,))
+    transactions_out = Decimal(cur.fetchone()[0])
+
+    cur.execute("""SELECT
+                        COALESCE(SUM(transfers_in.amount), 0) AS transfers_in
+                    FROM
+                        accounts
+                    JOIN transfers as transfers_in ON transfers_in.receiver_bank_account_id = accounts.id
+                    WHERE
+                        accounts.username = ?;
+    """, (username,))
+    transfers_in = Decimal(cur.fetchone()[0])
+    
+    cur.execute("""SELECT
+                        COALESCE(SUM(transfers_out.amount), 0) AS transfers_out
+                    FROM
+                        accounts
+                    JOIN transfers as transfers_out ON transfers_out.sender_bank_account_id = accounts.id
+                    WHERE
+                        accounts.username = ?;
+    """, (username,))
+                
+    transfers_out = Decimal(cur.fetchone()[0])
+
     cur.close()
 
-    if infos:
-        total_income = Decimal(infos[0])
-        total_expenses = Decimal(infos[1])
-        balance = Decimal(infos[2])
-    else:
-        total_income = Decimal('0.00')
-        total_expenses = Decimal('0.00')
-        balance = Decimal('0.00')
+    total_income = transfers_in
+    total_expenses = transfers_out + transactions_out
+
+    balance = total_income - total_expenses
 
     return {
         "total_income": f"{total_income:.2f}",
@@ -105,6 +115,17 @@ def create_user(db, username, password):
     db.commit()
     cur.close()
 
+def add_transaction(db, username, amount, description):
+    cur = db.cursor()
+
+    cur.execute("SELECT id FROM accounts WHERE username = ?", (username,))
+    account_id = cur.fetchone()[0]
+
+    cur.execute("INSERT INTO transactions (bank_account_id, amount, description) VALUES (?, ?, ?)", (account_id, amount, description))
+
+    db.commit()
+    cur.close()
+
 @app.get("/")
 def index():
     return render_template('index.html')
@@ -120,6 +141,12 @@ def login():
         return redirect(url_for("me"))
     else:
         return render_template("index.html", error="Invalid username or password")
+
+@app.get("/logout")
+def logout():
+    session.pop("username", None)
+
+    return redirect(url_for("index"))
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
@@ -157,21 +184,39 @@ def after_request(response):
 
 @app.get("/me")
 def me():
-    if "username" in session:
-        username = session["username"]
-
-        account_infos = get_balance_infos(g.db, username)
-        past_operations = get_operations(g.db, username)
-
-        return render_template("me.html", username=username, infos=account_infos, operations=past_operations, len=len(past_operations))
-    else:
+    if "username" not in session:
         return redirect(url_for("index"))
+    
+    username = session["username"]
 
-@app.get("/logout")
-def logout():
-    session.pop("username", None)
+    account_infos = get_balance_infos(g.db, username)
+    past_operations = get_operations(g.db, username)
 
-    return redirect(url_for("index"))
+    return render_template("me.html", username=username, infos=account_infos, operations=past_operations, len=len(past_operations))
+        
+
+@app.route("/transaction", methods=["GET", "POST"])
+def transaction():
+    if request.method == "GET":
+        return render_template("make_transaction.html")
+    elif request.method == "POST":
+        if "username" not in session:
+            return redirect(url_for("index"))
+
+        username = session["username"]
+        amount = request.form["amount"]
+
+        print(amount)
+        print(type(amount))
+        return amount
+
+
+        description = request.form["description"]
+
+        add_transaction(g.db, username, amount, description)
+
+        return redirect(url_for("me"))
+
 
 if __name__ == "__main__":
     app.run(debug=True)
