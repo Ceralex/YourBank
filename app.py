@@ -204,15 +204,23 @@ def transaction():
             return redirect(url_for("index"))
 
         username = session["username"]
+
         amount = request.form["amount"]
-
-        print(amount)
-        print(type(amount))
-        return amount
-
-
         description = request.form["description"]
 
+        if amount.count(",") > 1:
+            return render_template("make_transaction.html", error="Invalid amount")
+        
+        amount = amount.strip().replace(",", ".")
+
+        try:
+            Decimal(amount)
+        except:
+            return render_template("make_transaction.html", error="Invalid amount")
+                
+        if float(amount) <= 0:
+            return render_template("make_transaction.html", error="Invalid amount")
+        
         add_transaction(g.db, username, amount, description)
 
         return redirect(url_for("me"))
