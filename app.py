@@ -261,6 +261,11 @@ def transaction():
         if float(amount) <= 0:
             return render_template("make_transaction.html", error="Invalid amount")
         
+        balance = get_balance_infos(g.db, username).get("balance")
+        
+        if Decimal(balance) - Decimal(amount) < 0:
+            return render_template("make_transaction.html", error="Insufficient funds")
+        
         add_transaction(g.db, username, amount, description)
 
         return redirect(url_for("me"))
@@ -298,6 +303,10 @@ def transfer():
         if beneficiary_id is None:
             return render_template("make_transfer.html", error="Beneficiary not found")
 
+        balance = get_balance_infos(g.db, username).get("balance")
+
+        if Decimal(balance) - Decimal(amount) < 0:
+            return render_template("make_transfer.html", error="Insufficient funds")
 
         make_transfer(g.db, username, beneficiary, amount, description)
 
@@ -318,5 +327,6 @@ def deposit():
         make_deposit(g.db, username, amount)
 
         return redirect(url_for("me"))
+
 if __name__ == "__main__":
     app.run(debug=True)
