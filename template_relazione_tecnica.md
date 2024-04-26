@@ -1,32 +1,94 @@
-# Relazione Tecnica - [Nome del Progetto]
+# Relazione Tecnica - YourBank
 
 ## Introduzione
-Breve introduzione al progetto, incluso lo scopo, gli obiettivi e il contesto.
+
+Questo progetto è un'applicazione web che simula una banca virtuale e alcune sue funzionalità di base: la creazione di un account personale con la visione dei propri bilanci, la possibilità di fare un deposito, una transazione o un bonifico ad un altro utente.
 
 ## Tecnologie Utilizzate
-Elenco e descrizione delle tecnologie, linguaggi di programmazione, framework, librerie e strumenti utilizzati nel progetto.
+
+- Python 3
+- Flask Web Framework
+- Database Sqlite
+- TailwindCSS
+- Flowbite Components
 
 ## Architettura del Sistema
-Descrizione dell'architettura generale del sistema, inclusi componenti principali, moduli e pattern architetturali utilizzati.
+
+L'applicazione è suddivisa in due file python, l'app.py principale e il services.py.
+Nel file app.py è presente la gestione delle routes e la parte più legata alle pagine web, mentre in services.py ci sono le funzioni che operano sul database.
+Tutti i template web sono nella cartella omonima; ho optato per utilizzarne uno di base (\_base.html) in cui sono inclusi tutti gli headers, compresa la cdn di tailwind, da cui derivano tutte le altre pagine.
 
 ## Database
-Descrizione dello schema del database, inclusi tabelle, relazioni, vincoli di integrità referenziale e tipi di dati utilizzati.
+
+- La tabella account viene utilizzata per l'autenticazione
+- La tabella transactions e transfers per le transazioni e i bonifici. Un deposito fatto dall'utente viene inserito come un bonifico con sender NULL.
+
+```sql
+CREATE TABLE accounts (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    username   TEXT NOT NULL UNIQUE,
+    password   CHAR(64) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE transactions (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    amount          REAL NOT NULL,
+    description     TEXT NOT NULL,
+    bank_account_id INTEGER REFERENCES accounts,
+    date            TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE transfers (
+    id                       INTEGER PRIMARY KEY AUTOINCREMENT,
+    amount                   REAL NOT NULL,
+    description              TEXT NOT NULL,
+    sender_bank_account_id   INTEGER REFERENCES accounts,
+    receiver_bank_account_id INTEGER REFERENCES accounts,
+    date                     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
 
 ## Sviluppo del Software
-Descrizione del processo di sviluppo seguito, inclusi metodi, tecniche e strumenti utilizzati per la gestione del codice sorgente e il controllo delle modifiche.
+
+Tutto lo sviluppo del progetto è stato eseguito utilizzando git ed effettuando commit ad ogni nuova feature, o bug fix, effettuato. <br>All'inizio dello sviluppo ho definito le user stories con una descrizione dei requisiti dell'applicazione finale.
 
 ## User Stories e Requisiti
-Elenco delle user stories identificate durante l'analisi preliminare, con una descrizione dettagliata di ciascuna e dei relativi criteri di accettazione.
 
-## Documentazione del Codice
-Indicazioni su come accedere e utilizzare la documentazione del codice sorgente, inclusi commenti nel codice e documentazione generata automaticamente.
+- Who? User
+  <br>
+  What? Sign up and login
+  <br>
+  How? With a specific form
 
-## Test e Validazione
-Descrizione dei test effettuati sul sistema per verificare il corretto funzionamento e la conformità ai requisiti specificati.
+- Who? User
+  <br>
+  What? See his balance and his operations history
+  <br>
+  How? With a nice UI
+
+- Who? User
+  <br>
+  What? Add transactions
+  <br>
+  How? With a form and a add button
+
+- Who? User
+  <br>
+  What? Make transfer to another user
+  <br>
+  How? With a form and the other's username
+
+- Who? User
+  <br>
+  What? Make deposit to his bank account
+  <br>
+  How? With a form with an amount selection
 
 ## Deploy e Manutenzione
-Descrizione del processo di deploy del sistema, inclusi eventuali passaggi necessari per configurare l'ambiente di produzione e gestire la manutenzione del sistema.
+
+Per il deploy ho sfruttato l'ambiene di python anywhere, il quale mi ha permesso di clonare la mia repository di git nella loro macchina virtuale remota e configurare con facilità l'hosting della mia applicazione.
 
 ## Conclusioni
-Breve riassunto delle principali conclusioni e considerazioni emerse durante lo sviluppo del progetto.
 
+Questo progetto è ancora in uno stato embrionale e possiede i minimi requisiti che un'applicazione di questo genere necessita, ma è una buona base per una possibile estensione futura.
