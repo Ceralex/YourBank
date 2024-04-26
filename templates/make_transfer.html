@@ -1,5 +1,10 @@
 {% extends "_base.html" %} {% block content %}
 <section class="h-screen flex flex-col justify-center items-center gap-10">
+	<a
+		href="{{ url_for('me') }}"
+		class="text-blue-500 text-2xl font-semibold underline p-8 absolute top-0 left-0"
+		>Back</a
+	>
 	<h1 class="text-3xl font-bold">Make Transfer</h1>
 	<form class="w-1/5" action="{{ url_for('transfer') }}" method="post">
 		<div class="mb-5">
